@@ -33,7 +33,10 @@ void inserir(_fila *fila, int elemento)
 }
 void remover(_fila *fila)
 {
+    _node *aux = fila->frente;
     fila->frente = fila->frente->atras;
+    fila->topo = fila->frente->valor;
+    free(aux);
 
 }
 void topo(_fila *fila)
@@ -58,5 +61,7 @@ int main()
     inserir (fila, 30);
     inserir (fila, 40);
     inserir (fila, 50);
+    mostrar_elementos(fila);
+    remover(fila);
     mostrar_elementos(fila);
 }
