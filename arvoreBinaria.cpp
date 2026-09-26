@@ -7,21 +7,30 @@ typedef struct Arv
     Arv *direita;
 } Arvore;
 Arvore *arvore(int itemDaRaiz);
+bool arvoreVazia(Arvore *&_arvore);
 void inserirItem(Arvore *&_arvore, int item);
 void removerItem(Arvore *&_arvore, int item);
-void exibirArvore(Arvore *&_arvore);
 void encontrarItem(Arvore *&_arvore, int item);
 void mostrarArvoreEmOrdem(Arvore *&_arvore);
 void mostrarArvorePreOrdem(Arvore *&_arvore);
 void mostrarArvorePosOrdem(Arvore *&_arvore);
 void mostrarArvoreBFS(Arvore *&_arvore);
 void mostrarArvoreDFS(Arvore *&_arvore);
-void exibirMenu(Arvore *&_arvore);
+void exibirMenu();
+void limpaTela()
+{
+    fputs("\x1b[1;1H\x1b[2J", stdout);
+    fflush(stdout);
+}
+void liberarArvore(Arvore *&arvore);
 int main()
 {
     cout << "Seja muito bem vindo!" << endl;
     int escolha = -1;
-    Arvore *_arvore = arvore();
+    int valor;
+    cout << "Qual deve ser o valor da raiz da árvore?" << '\n';
+    cin >> valor;
+    Arvore *_arvore = arvore(valor);
     do
     {
         exibirMenu();
@@ -29,56 +38,63 @@ int main()
         switch (escolha)
         {
         case 1:
-            int valor;
             cout << "Qual valor deve ser inseriodo?" << '\n';
             cin >> valor;
             inserirItem(_arvore, valor);
+            limpaTela();
             break;
         case 2:
-            int valor;
             cout << "Qual valor deve ser removido?" << '\n';
             cin >> valor;
             removerItem(_arvore, valor);
+            limpaTela();
             break;
         case 3:
-            exibirArvore(_arvore);
-            break;
-        case 4:
-            int valor;
             cout << "Qual valor deve ser encontrado?" << '\n';
             cin >> valor;
             encontrarItem(_arvore, valor);
+            limpaTela();
+            break;
+        case 4:
+            mostrarArvoreEmOrdem(_arvore);
+            limpaTela();
             break;
         case 5:
-            mostrarArvoreEmOrdem(_arvore);
+            mostrarArvorePreOrdem(_arvore);
+            limpaTela();
             break;
         case 6:
-            mostrarArvorePreOrdem(_arvore);
+            mostrarArvorePosOrdem(_arvore);
+            limpaTela();
             break;
         case 7:
-            mostrarArvorePosOrdem(_arvore);
+            mostrarArvoreBFS(_arvore);
+            limpaTela();
             break;
         case 8:
-            mostrarArvoreBFS(_arvore);
-            break;
-        case 9:
             mostrarArvoreDFS(_arvore);
+            limpaTela();
             break;
         case 0:
             liberarArvore(_arvore);
             cout << "Encerrando programa..." << '\n';
+            return 0;
         }
     } while (escolha != 0);
     cout << "Encerrando...";
     return 0;
 }
-Arvore *arvore()
+Arvore *arvore(int item)
 {
     Arvore *arvore = new Arvore;
-    arvore->item = NULL;
+    arvore->item = item;
     arvore->esquerda = nullptr;
     arvore->direita = nullptr;
     return arvore;
+}
+bool arvoreVazia(Arvore *&_arvore)
+{
+    return _arvore == nullptr;
 }
 void inserirItem(Arvore *&_arvore, int item)
 {
@@ -93,34 +109,35 @@ void inserirItem(Arvore *&_arvore, int item)
     {
         Arvore *_arvoreAtual = filaDeBusca.front();
         filaDeBusca.pop();
-        if (_arvore->esquerda == nullptr)
+        if (_arvoreAtual->esquerda == nullptr)
         {
             Arvore *_novaArvore = arvore(item);
-            _arvore->esquerda = _novaArvore;
+            _arvoreAtual->esquerda = _novaArvore;
             return;
         }
         else
         {
-            filaDeBusca.push(_arvore->esquerda);
+            filaDeBusca.push(_arvoreAtual->esquerda);
         }
-        if (_arvore->direita == nullptr)
+        if (_arvoreAtual->direita == nullptr)
         {
             Arvore *_novaArvore = arvore(item);
-            _arvore->direita = _novaArvore;
+            _arvoreAtual->direita = _novaArvore;
             return;
         }
         else
         {
-            filaDeBusca.push(_arvore->direita);
+            filaDeBusca.push(_arvoreAtual->direita);
         }
+        delete _arvoreAtual;
     }
 }
 void removerItem(Arvore *&_arvore, int item)
 {
     // busca feita utilizando o metódo BFS para procurar o item a ser excluido.
-    if (_arvore == nullptr)
+    if (arvoreVazia(_arvore))
     {
-        cout << "A arvore está vazia." << '\n';
+        return;
     }
     queue<Arvore *> filaDeBusca;
     // e se apagar a root?
@@ -150,64 +167,140 @@ void removerItem(Arvore *&_arvore, int item)
         // caso em que tem ambos os lados
         else
         {
-            // arrumar este else
-            Arvore *removidoPai = _arvore;
-            Arvore *removido = _arvore->direita;
-            while (removido->esquerda != nullptr)
+            Arvore *cima = _arvore;
+            Arvore *curr = _arvore->direita;
+            while (curr->esquerda != nullptr)
             {
-                removidoPai = removido;
-                removido = removido->esquerda;
+                cima = curr;
+                curr = curr->esquerda;
             }
-            _arvore->item = removido->item;
-            removidoPai->esquerda = nullptr;
-
-            delete removido;
-            return;
+            _arvore->item = curr->item;
+            if (cima == _arvore)
+            {
+                _arvore->direita = curr->direita;
+            }
+            else if (curr->direita)
+            {
+                cima->esquerda = curr->direita;
+            }
+            else
+            {
+                cima->esquerda = nullptr;
+            }
+            delete curr;
         }
     }
     filaDeBusca.push(_arvore);
     while (!filaDeBusca.empty())
     {
-        Arvore *aux = filaDeBusca.front();
-        if (aux->item == item)
+        Arvore *_arvoreAtual = filaDeBusca.front();
+        if (_arvoreAtual->direita->item == item)
+        {
+            _arvoreAtual->direita = _arvoreAtual->direita->direita;
+        }
+        else if (_arvoreAtual->esquerda->item == item)
         {
         }
     }
 }
-void exibirArvore(Arvore *&_arvore)
-{
-}
+
 void encontrarItem(Arvore *&_arvore, int item)
 {
+    if (arvoreVazia(_arvore))
+    {
+        return;
+    }
+    Arvore *_arvoreAtual = _arvore;
+    queue<Arvore *> filaDeBusca;
+    filaDeBusca.push(_arvoreAtual);
+    int level = 0;
+    while (!filaDeBusca.empty())
+    {
+        _arvoreAtual = filaDeBusca.front();
+        filaDeBusca.pop();
+        if (_arvoreAtual->item == item)
+        {
+        }
+    }
 }
 void mostrarArvoreEmOrdem(Arvore *&_arvore)
 {
+    if (arvoreVazia(_arvore))
+    {
+        return;
+    }
+    mostrarArvoreEmOrdem(_arvore->esquerda);
+    cout << _arvore->item << '\n';
+    mostrarArvoreEmOrdem(_arvore->direita);
 }
 void mostrarArvorePreOrdem(Arvore *&_arvore)
 {
+    if (arvoreVazia(_arvore))
+    {
+        return;
+    }
+    cout << _arvore->item << '\n';
+    mostrarArvorePreOrdem(_arvore->esquerda);
+    mostrarArvorePreOrdem(_arvore->direita);
 }
-void motrarArvorePosOrdem(Arvore *&_arvore)
+void mostrarArvorePosOrdem(Arvore *&_arvore)
 {
+    if (arvoreVazia(_arvore))
+    {
+        return;
+    }
+    mostrarArvorePosOrdem(_arvore->esquerda);
+    mostrarArvorePosOrdem(_arvore->direita);
+    cout << _arvore->item << '\n';
 }
 void mostrarArvoreBFS(Arvore *&_arvore)
 {
+    if (arvoreVazia(_arvore))
+    {
+        return;
+    }
+    queue<Arvore *> filaDeBusca;
+    filaDeBusca.push(_arvore);
+    while (!filaDeBusca.empty())
+    {
+        Arvore *_arvoreAtual = filaDeBusca.front();
+        filaDeBusca.pop();
+        if (_arvoreAtual->esquerda)
+        {
+            filaDeBusca.push(_arvoreAtual->esquerda);
+        }
+        if (_arvoreAtual->direita)
+        {
+            filaDeBusca.push(_arvoreAtual->direita);
+        }
+        cout << _arvoreAtual->item << '\n';
+    }
 }
 void mostrarArvoreDFS(Arvore *&_arvore)
 {
+    mostrarArvoreEmOrdem(_arvore);
 }
 void liberarArvore(Arvore *&_arvore)
 {
+    if (arvoreVazia(_arvore))
+    {
+        return;
+    }
+    liberarArvore(_arvore->esquerda); // deleta tudo da esquerda
+    liberarArvore(_arvore->direita);  // tudo da direita
+    delete _arvore;                   // raiz
+    _arvore = nullptr;
 }
+
 void exibirMenu()
 {
     cout << "1 - Inserir Item na Arvore" << '\n';
     cout << "2 - Remover Item da Arvore" << '\n';
-    cout << "3 - Exibir Arvore inteira" << '\n';
-    cout << "4 - Encontrar Item na Arvore" << '\n';
-    cout << "5 - Mostrar Arvore em Ordem" << '\n';
-    cout << "6 - Mostrar Arvore em Pre-Ordem" << '\n';
-    cout << "7 - Mostrar Arvore em Pos-Ordem" << '\n';
-    cout << "8 - Mostrar Arvore utilizando DFS" << '\n';
-    cout << "9 - Mostrar Arvore utilizando BFS" << '\n';
+    cout << "3 - Encontrar Item na Arvore" << '\n';
+    cout << "4 - Mostrar Arvore em Ordem" << '\n';
+    cout << "5 - Mostrar Arvore em Pre-Ordem" << '\n';
+    cout << "6 - Mostrar Arvore em Pos-Ordem" << '\n';
+    cout << "7 - Mostrar Arvore utilizando DFS" << '\n';
+    cout << "8 - Mostrar Arvore utilizando BFS" << '\n';
     cout << "0 - Encerrar programa" << '\n';
 }
