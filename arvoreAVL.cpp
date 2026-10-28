@@ -57,9 +57,9 @@ node *rotacaoDireita(node *y)
 
     x->direita = y;
     y->esquerda = aux;
-
     y->altura = 1 + maxAltura(y->esquerda, y->direita);
     x->altura = 1 + maxAltura(x->esquerda, x->direita);
+    return x;
 
     return x;
 }
@@ -71,10 +71,8 @@ node *rotacaoEsquerda(node *x)
 
     y->esquerda = x;
     x->direita = aux;
-
     x->altura = 1 + maxAltura(x->esquerda, x->direita);
     y->altura = 1 + maxAltura(y->esquerda, y->direita);
-
     return y;
 }
 
